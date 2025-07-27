@@ -1,0 +1,15 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY ../backend/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ../backend ./backend
+COPY ../.env ./
+
+WORKDIR /app/backend
+
+EXPOSE 5000
+
+CMD ["gunicorn", "app:create_app()", "-b", "0.0.0.0:5000", "--timeout", "120", "--workers", "2"] 

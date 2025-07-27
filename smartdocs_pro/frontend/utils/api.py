@@ -1,0 +1,36 @@
+import requests
+import streamlit as st
+import os
+from dotenv import load_dotenv
+load_dotenv()
+API_URL = os.getenv('API_URL', 'http://localhost:5000')
+
+def upload_file(file):
+    files = {'file': (file.name, file, file.type)}
+    resp = requests.post(f'{API_URL}/upload', files=files)
+    return resp.json()
+
+def summarize_doc(doc_id, ext):
+    resp = requests.post(f'{API_URL}/summarize', json={'document_id': doc_id, 'ext': ext})
+    return resp.json()
+
+def classify_doc(doc_id, ext):
+    resp = requests.post(f'{API_URL}/classify', json={'document_id': doc_id, 'ext': ext})
+    return resp.json()
+
+def translate_doc(doc_id, ext, target_lang):
+    resp = requests.post(f'{API_URL}/translate', json={'document_id': doc_id, 'ext': ext, 'target_lang': target_lang})
+    return resp.json()
+
+def ocr_doc(doc_id, ext):
+    resp = requests.post(f'{API_URL}/ocr', json={'document_id': doc_id, 'ext': ext})
+    return resp.json()
+
+def rag_qa(doc_id, ext, question):
+    resp = requests.post(f'{API_URL}/rag', json={
+        'document_id': doc_id,
+        'ext': ext,
+        'question': question
+    })
+    return resp.json()
+

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: smartdocs-pro-backend
+    env: docker
+    plan: free
+    dockerfilePath: ./deploy/Dockerfile
+    envVars:
+      - fromDotEnv: true
+    autoDeploy: true
+    healthCheckPath: /status
+    region: oregon
+    buildCommand: ""
+    startCommand: ""
+    ports:
+      - 5000 
