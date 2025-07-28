@@ -30,7 +30,7 @@ def rag_qa(doc_id, ext, question):
         'ext': ext,
         'question': question
     }
-    resp = requests.post(f'{API_URL}/rag-qa', json=data)
+    resp = requests.post(f'{API_URL}/rag', json=data)
     print("RAW RESPONSE:", resp.text)
     resp.raise_for_status() 
     return resp.json()
