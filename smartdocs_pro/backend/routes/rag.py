@@ -5,7 +5,7 @@ from services.rag_qa import answer_question
 rag_bp = Blueprint("rag", __name__)
 UPLOAD_FOLDER = "/tmp/smartdocs_uploads"
 
-@rag_bp.route("/rag", methods=["POST"])
+@rag_bp.route("/rag-qa", methods=["POST"])
 def rag():
     data = request.json
     doc_id = data.get("document_id")
