@@ -27,10 +27,14 @@ def ocr_doc(doc_id, ext):
     return resp.json()
 
 def rag_qa(doc_id, ext, question):
-    resp = requests.post(f'{API_URL}/rag', json={
+    data = {
         'document_id': doc_id,
         'ext': ext,
         'question': question
-    })
+    }
+    resp = requests.post(f'{API_URL}/rag-qa', json=data)
+    print("RAW RESPONSE:", resp.text)
+    resp.raise_for_status() 
     return resp.json()
+
 
