@@ -3,7 +3,7 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 load_dotenv()
-API_URL = os.getenv('API_URL', 'http://localhost:5000')
+API_URL = st.secrets["API_URL"]
 
 def upload_file(file):
     files = {'file': (file.name, file, file.type)}
