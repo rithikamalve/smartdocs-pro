@@ -1,8 +1,6 @@
 import requests
 import streamlit as st
 import os
-from dotenv import load_dotenv
-load_dotenv()
 API_URL = st.secrets["API_URL"]
 
 def upload_file(file):
