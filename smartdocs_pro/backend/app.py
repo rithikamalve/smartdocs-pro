@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
 from config import load_config
-import os
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +24,10 @@ def create_app():
     app.register_blueprint(status_bp)
     app.register_blueprint(rag_bp)
 
+    # Health check route
+    @app.route("/", methods=["GET"])
+    def health():
+        return {"status": "ok"}, 200
 
     return app
 
