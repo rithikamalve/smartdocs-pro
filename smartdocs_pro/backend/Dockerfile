@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD gunicorn --chdir . --bind 0.0.0.0:${PORT:-5000} --workers 1 wsgi:app
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "wsgi:app"]
