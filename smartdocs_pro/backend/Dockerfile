@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--chdir", ".", "--bind", "0.0.0.0:5000", "app:create_app()"]
+CMD ["gunicorn", "--chdir", ".", "--bind", "0.0.0.0:5000", "--workers", "1", "wsgi:app"]
