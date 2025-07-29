@@ -12,8 +12,6 @@ pdf2image
 torch
 transformers
 sentencepiece
-langchain
-langchain-community
 faiss-cpu
 pypdf
 sentence-transformers
