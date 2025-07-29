@@ -1,16 +1,21 @@
 import streamlit as st
 import json
+import re
 from utils.api import (
     upload_file,
     summarize_doc,
     classify_doc,
     translate_doc,
     ocr_doc,
-    rag_qa  # ✅ New import
+    rag_qa
 )
 
 st.set_page_config(page_title="SmartDocs Pro", layout="wide")
 st.title("SmartDocs Pro")
+
+# Initialize cache
+if "ocr_text_cache" not in st.session_state:
+    st.session_state.ocr_text_cache = {}
 
 st.sidebar.header("Upload Document")
 uploaded_file = st.sidebar.file_uploader("Choose a PDF or DOCX", type=["pdf", "docx"]) 
@@ -19,13 +24,10 @@ task = st.sidebar.selectbox("Task", [
     "Classify",
     "Translate",
     "OCR",
-    "RAG QA"  # ✅ New task added
+    "RAG QA"
 ])
 
 def display_result(result):
-    """
-    Utility to display API results cleanly
-    """
     try:
         if isinstance(result, dict):
             if "summary" in result:
@@ -38,33 +40,19 @@ def display_result(result):
                 st.markdown(result["classification"])
             if "translation" in result:
                 st.markdown("### Translation")
-                
                 translation_text = (
                     result["translation"].get("translation")
                     if isinstance(result["translation"], dict)
                     else result["translation"]
                 )
-
-                # Basic formatting fixes
-                formatted = translation_text.strip()
-
-                # Add line breaks after periods if not already there (for long blocks)
-                import re
-                formatted = re.sub(r'(?<=[^.\n])\.\s+', '.\n\n', formatted)
-
-                # Convert bullets (• or hyphen) to markdown lists
+                formatted = re.sub(r'(?<=[^.\n])\.\s+', '.\n\n', translation_text.strip())
                 formatted = re.sub(r"[•\-]\s*", "- ", formatted)
-
-                # Optional: Fix repeated spaces
                 formatted = re.sub(r"\n{2,}", "\n\n", formatted)
-
                 st.markdown(formatted)
-
-
             if "ocr_text" in result:
                 st.markdown("### OCR Text")
                 st.markdown(result["ocr_text"])
-            if "answer" in result:  # ✅ For RAG QA
+            if "answer" in result:
                 st.markdown("### Answer")
                 st.markdown(result["answer"])
         else:
@@ -74,13 +62,23 @@ def display_result(result):
         st.error(f"Error displaying result: {e}")
         st.write(result)
 
-# Main flow
+# === MAIN LOGIC ===
 if uploaded_file:
     doc_info = upload_file(uploaded_file)
     st.sidebar.success(f"Uploaded: {doc_info['filename']}")
     doc_id = doc_info['document_id']
     ext = '.' + doc_info['filename'].split('.')[-1].lower()
 
+    # Run OCR immediately and cache
+    if doc_id not in st.session_state.ocr_text_cache:
+        with st.spinner("Running OCR..."):
+            ocr_result = ocr_doc(doc_id, ext)
+            ocr_text = ocr_result.get("ocr_text", "")
+            st.session_state.ocr_text_cache[doc_id] = ocr_text
+    else:
+        ocr_text = st.session_state.ocr_text_cache[doc_id]
+
+    # Task handling
     if task == "Summarize":
         if st.sidebar.button("Summarize"):
             result = summarize_doc(doc_id, ext)
@@ -99,13 +97,12 @@ if uploaded_file:
             display_result(result)
 
     elif task == "OCR":
-        if st.sidebar.button("Run OCR"):
-            result = ocr_doc(doc_id, ext)
-            display_result(result)
-
+        st.markdown("### OCR Text")
+        st.markdown(ocr_text)
 
     elif task == "RAG QA":
         question = st.text_input("Ask a question about the document:")
         if st.button("Get Answer"):
-            result = rag_qa(doc_id, ext, question)
-            display_result(result)
+            with st.spinner("Running RAG over OCR text..."):
+                result = rag_qa(ocr_text, question)
+                display_result(result)
