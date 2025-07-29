@@ -1,66 +1,64 @@
 import os
-from groq import Groq
+import faiss
+import numpy as np
 from dotenv import load_dotenv
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
+from groq import Groq
+from sentence_transformers import SentenceTransformer
 
+# Load env + model once
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
+model = SentenceTransformer("all-MiniLM-L6-v2")  # ~80MB model
 
+def split_text(text, chunk_size=500, overlap=50):
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = min(len(text), start + chunk_size)
+        chunks.append(text[start:end])
+        start += chunk_size - overlap
+    return chunks
 
-def create_vectorstore_from_text(text):
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    doc = Document(page_content=text)
-    chunks = splitter.split_documents([doc])
+def create_vector_index(chunks):
+    vectors = model.encode(chunks, convert_to_numpy=True)
+    dim = vectors.shape[1]
+    index = faiss.IndexFlatL2(dim)
+    index.add(vectors)
+    return index, vectors, chunks
 
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    vectordb = FAISS.from_documents(chunks, embeddings)
-    return vectordb
+def answer_question(text, question, k=5):
+    print(f"📥 Text length: {len(text)}")
+    chunks = split_text(text)
+    index, vectors, raw_chunks = create_vector_index(chunks)
 
+    print("✅ FAISS index built.")
+    q_vec = model.encode([question])
+    _, I = index.search(q_vec, k)
+    relevant_chunks = [raw_chunks[i] for i in I[0]]
 
-def answer_question(text, question):
-    try:
-        print(f"📥 Received text of length: {len(text)}")
+    context = "\n\n".join(relevant_chunks)
+    prompt = [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant that answers questions using the context provided.",
+        },
+        {
+            "role": "user",
+            "content": f"Context:\n{context}\n\nQuestion: {question}",
+        },
+    ]
 
-        vectordb = create_vectorstore_from_text(text)
-        print("✅ Vector store created.")
+    response = client.chat.completions.create(
+        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        messages=prompt,
+        temperature=0.2,
+        max_tokens=1024,
+        top_p=1,
+    )
 
-        retriever = vectordb.as_retriever(search_kwargs={"k": 5})
-        relevant_docs = retriever.invoke(question)
-        print(f"✅ Retrieved {len(relevant_docs)} relevant documents.")
-
-        context = "\n\n".join([doc.page_content for doc in relevant_docs])
-
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a helpful assistant that answers questions using the context provided.",
-            },
-            {
-                "role": "user",
-                "content": f"Context:\n{context}\n\nQuestion: {question}",
-            },
-        ]
-
-        response = client.chat.completions.create(
-            model="meta-llama/llama-4-maverick-17b-128e-instruct",
-            messages=messages,
-            temperature=0.2,
-            max_tokens=1024,
-            top_p=1,
-            stream=False,
-        )
-
-        print("✅ Got response from Groq.")
-        return {
-            "question": question,
-            "answer": response.choices[0].message.content.strip(),
-            "context_snippets": [doc.page_content for doc in relevant_docs],
-        }
-
-    except Exception as e:
-        print(f"❌ Error in answer_question: {e}")
-        raise e
+    return {
+        "question": question,
+        "answer": response.choices[0].message.content.strip(),
+        "context_snippets": relevant_chunks,
+    }
