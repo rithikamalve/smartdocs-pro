@@ -6,6 +6,7 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
     load_config(app)
+    print("Flask app is initializing...")
 
     # Register blueprints
     from routes.upload import upload_bp
