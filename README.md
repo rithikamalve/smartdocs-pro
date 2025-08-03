@@ -2,6 +2,10 @@
 
 **SmartDocs Pro** is an intelligent document understanding system designed to extract, classify, translate, summarize, and answer questions about document content using state-of-the-art AI models.  
 It supports **PDFs**, **DOCX files**, **images**, and **scanned text**, making it ideal for resumes, reports, and both structured and unstructured documents.
+---
+## 🎥 Demo
+
+[![SmartDocs Pro Demo](https://img.youtube.com/vi/MiIn2E9iXlg/0.jpg)](https://youtu.be/MiIn2E9iXlg)
 
 ---
 
