@@ -1,7 +1,7 @@
 # 📄 SmartDocs Pro
 
 **SmartDocs Pro** is an intelligent document understanding system designed to extract, classify, translate, summarize, and answer questions about document content using state-of-the-art AI models.  
-It supports **PDFs**, **DOCX files**, **images**, and **scanned text**, making it ideal for resumes, reports, and both structured and unstructured documents.**
+It supports **PDFs**, **DOCX files**, **images**, and **scanned text**, making it ideal for resumes, reports, and both structured and unstructured documents.
 ---
 ## 🎥 Demo
 
@@ -31,7 +31,6 @@ It supports **PDFs**, **DOCX files**, **images**, and **scanned text**, making i
 | **Embeddings**    | HuggingFace `all-MiniLM-L6-v2`, FAISS |
 | **OCR Engine**    | Tesseract |
 | **Parsing Tools** | `pdfplumber`, `python-docx`, `pdf2image` |
-| **Deployment**    | Docker, Render, Streamlit Cloud |
 
 ---
 
